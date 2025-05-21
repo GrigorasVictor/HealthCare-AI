@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:frontend/model.dart';
 import 'package:frontend/service.dart';
-import 'package:flutter_dropzone/flutter_dropzone.dart';
 
 void main() {
   SystemChrome.setSystemUIOverlayStyle(
@@ -81,7 +80,6 @@ class _HomePageState extends State<HomePage> {
   String? gender;
   bool isChild = false;
   bool isPregnant = false;
-  String? _selectedFileName;
   final TextEditingController _commentController = TextEditingController();
   final Map<String, bool> serviceStatus = {
     'Server': true,
@@ -102,17 +100,14 @@ class _HomePageState extends State<HomePage> {
 
   Future<void> _checkAllServices() async {
     try {
-      final serverStatus = await ServiceFunctions.checkServerStatus();
-      final aiStatus = await ServiceFunctions.checkAIStatus();
-      final calendarStatus = await ServiceFunctions.checkGoogleCalendarStatus();
+      Map<String, bool> answer = await ServiceFunctions.checkAllServiceStatus();
 
       setState(() {
-        serviceStatus['Server'] = serverStatus;
-        serviceStatus['AI'] = aiStatus;
-        serviceStatus['Google Calendar'] = calendarStatus;
+        serviceStatus['Server'] = answer['server']!;
+        serviceStatus['AI'] = answer['ai']!;
+        serviceStatus['Google Calendar'] = answer['calendar']!;
       });
     } catch (e) {
-      print('Error checking services: $e');
     }
   }
 
@@ -157,21 +152,13 @@ class _HomePageState extends State<HomePage> {
       filePath: globalFileName, // Use global file name
     );
 
-    if (success) {
+    if (success.isNotEmpty) {
       setState(() {
         _commentController.clear();
         globalFileName = null; // Clear global file name
         globalFileBytes = null; // Clear global file bytes
       });
-        final mockModels = [
-    Medicine(name: 'Paracetamol', date: DateTime.now(), time: TimeOfDay.now()),
-    Medicine(name: 'Ibuprofen', date: DateTime.now().add(const Duration(days: 1)), time: const TimeOfDay(hour: 9, minute: 0)),
-    Medicine(name: 'Aspirin', date: DateTime.now().add(const Duration(days: 2)), time: const TimeOfDay(hour: 18, minute: 30)),
-    Medicine(name: 'Paracetamol', date: DateTime.now(), time: TimeOfDay.now()),
-    Medicine(name: 'Ibuprofen', date: DateTime.now().add(const Duration(days: 1)), time: const TimeOfDay(hour: 9, minute: 0)),
-    Medicine(name: 'Aspirin', date: DateTime.now().add(const Duration(days: 2)), time: const TimeOfDay(hour: 18, minute: 30)),
-  ];
-      _showConfirmationDialog(context, mockModels);
+      _showConfirmationDialog(context, success);
     } else {
       _showSnackBar('Failed to send payload.', Colors.red);
     }

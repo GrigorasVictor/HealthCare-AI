@@ -2,7 +2,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:typed_data';
-import 'package:flutter/material.dart';
+import 'package:frontend/model.dart';
 import 'package:http/http.dart' as http;
 import 'package:image_picker/image_picker.dart';
 
@@ -15,75 +15,65 @@ class FilePickerResult {
 }
 
 class ServiceFunctions {
-  static const String _baseUrl = 'https://api.medicare-ai.example.com';
+  static const String _baseUrl = 'http://localhost:8080';
 
-  static const String _apiKey = 'YOUR_API_KEY';
-
-  static Map<String, String> get _headers => {
-    'Content-Type': 'application/json',
-    'Authorization': 'Bearer $_apiKey',
-  };
-
-  static Future<bool> checkServerStatus() async {
+  static Future<Map<String, bool>> checkAllServiceStatus() async {
     try {
-      await Future.delayed(const Duration(seconds: 1));
-      return DateTime.now().second % 10 != 0; // 90% chance of being online
+      final response = await http.get(Uri.parse('$_baseUrl/server/status'));
+      if (response.statusCode == 200) {
+        final decoded = jsonDecode(response.body) as Map<String, dynamic>;
+        return decoded.map((key, value) => MapEntry(key, value as bool));
+      } else {
+        return {"server": false,
+                "ai": false,
+                "calendar": false};
+      }
     } catch (e) {
-      print('Error checking server status: $e');
-      return false;
+      print('Error checking service status: $e');
+      return {"server": false,
+                "ai": false,
+                "calendar": false};
     }
   }
-
-  static Future<bool> checkAIStatus() async {
-    try {
-      await Future.delayed(const Duration(seconds: 1));
-
-      return DateTime.now().second % 5 != 0;
-    } catch (e) {
-      print('Error checking AI status: $e');
-      return false;
-    }
-  }
-
-  static Future<bool> checkGoogleCalendarStatus() async {
-    try {
-      await Future.delayed(const Duration(seconds: 1));
-      return DateTime.now().second % 7 != 0; // 85% chance of being online
-    } catch (e) {
-      print('Error checking Google Calendar status: $e');
-      return false;
-    }
-  }
-
-  static Future<bool> sendPayload({
+  static Future<List<Medicine>> sendPayload({
     required Map<String, dynamic> payload,
     Uint8List? fileBytes,
     String? filePath,
   }) async {
     try {
-      // Simulate a delay for sending the payload
-      await Future.delayed(const Duration(seconds: 2));
+      var uri = Uri.parse('$_baseUrl/server/send');
+      var request = http.MultipartRequest('POST', uri);
 
-      // Log the payload and file details for debugging
-      print('Sending payload: $payload');
+      // Add text fields
+      request.fields['comment'] = payload['comment'] ?? '';
+      request.fields['gender'] = payload['gender'] ?? '';
+      request.fields['child'] = (payload['child'] ?? false).toString();
+      request.fields['pregnant'] = (payload['pregnant'] ?? false).toString();
+
+      // Add file if present
       if (fileBytes != null && filePath != null) {
-        print('With file: $filePath (${fileBytes.length} bytes)');
-      } else if (filePath != null) {
-        print('With file: $filePath');
+        request.files.add(
+          http.MultipartFile.fromBytes(
+            'file',
+            fileBytes,
+            filename: filePath.split('/').last,
+          ),
+        );
       }
 
-      // Simulate a successful response
-      return true;
+      var streamedResponse = await request.send();
+      var response = await http.Response.fromStream(streamedResponse);
+
+      if (response.statusCode == 200) {
+        final List<dynamic> decoded = jsonDecode(response.body);
+        return decoded.map((item) => Medicine.fromJson(item)).toList();
+      } else {
+        return [];
+      }
     } catch (e) {
-      // Log the error
-      print('Error sending payload: $e');
-      return false;
+      return [];
     }
   }
-
-  /// Pick an image locally (no server interaction)
-  ///
-  /// Returns a FilePickerResult with the selected file information
   static Future<FilePickerResult?> pickImageLocally() async {
     try {
       // Use image picker to select an image
@@ -91,7 +81,6 @@ class ServiceFunctions {
       final pickedFile = await picker.pickImage(source: ImageSource.gallery);
 
       if (pickedFile == null) {
-        // User canceled the picker
         return null;
       }
 
@@ -105,7 +94,6 @@ class ServiceFunctions {
         path: pickedFile.path,
       );
     } catch (e) {
-      print('Error picking image: $e');
       throw Exception('Failed to pick image: $e');
     }
   }
@@ -115,14 +103,12 @@ class ServiceFunctions {
   ) async {
     try {
       final response = await http.post(
-        Uri.parse('https://your-server-endpoint/confirm'),
+        Uri.parse('$_baseUrl/server/calendar'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode(payload),
       );
-
       return response.statusCode == 200;
     } catch (e) {
-      print('Error sending confirmation payload: $e');
       return false;
     }
   }
