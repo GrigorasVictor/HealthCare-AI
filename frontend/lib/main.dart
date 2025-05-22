@@ -80,6 +80,8 @@ class _HomePageState extends State<HomePage> {
   String? gender;
   bool isChild = false;
   bool isPregnant = false;
+  bool _isSending = false; // Add loading state for send operation
+  bool _isConfirmationSending = false; // Add loading state for confirmation
   final TextEditingController _commentController = TextEditingController();
   final Map<String, bool> serviceStatus = {
     'Server': true,
@@ -130,39 +132,55 @@ class _HomePageState extends State<HomePage> {
   }
 
   void _handleSend() async {
-    final comment = _commentController.text;
+  final comment = _commentController.text;
 
-    if (globalFileName == null || globalFileBytes == null) {
-      _showSnackBar('Please select a file before sending.', Colors.red);
-      return;
-    }
+  if (globalFileName == null || globalFileBytes == null) {
+    _showSnackBar('Please select a file before sending.', Colors.red);
+    return;
+  }
 
-    // Prepare the payload
-    final payload = {
-      'comment': comment,
-      'gender': gender,
-      'isChild': isChild,
-      'isPregnant': isPregnant,
-    };
+  // Set loading state
+  setState(() {
+    _isSending = true;
+  });
 
+  // Prepare the payload
+  final payload = {
+    'comment': comment,
+    'gender': gender,
+    'isChild': isChild,
+    'isPregnant': isPregnant,
+  };
+
+  try {
     // Send the payload with file bytes
     final success = await ServiceFunctions.sendPayload(
       payload: payload,
-      fileBytes: globalFileBytes, // Use global file bytes
-      filePath: globalFileName, // Use global file name
+      fileBytes: globalFileBytes,
+      filePath: globalFileName,
     );
+
+    setState(() {
+      _isSending = false; // Reset loading state
+    });
 
     if (success.isNotEmpty) {
       setState(() {
         _commentController.clear();
-        globalFileName = null; // Clear global file name
-        globalFileBytes = null; // Clear global file bytes
+        globalFileName = null;
+        globalFileBytes = null;
       });
       _showConfirmationDialog(context, success);
     } else {
       _showSnackBar('Failed to send payload.', Colors.red);
     }
+  } catch (e) {
+    setState(() {
+      _isSending = false; // Reset loading state on error
+    });
+    _showSnackBar('Error: $e', Colors.red);
   }
+}
 
   void _showSnackBar(String message, Color color) {
     ScaffoldMessenger.of(
@@ -362,22 +380,31 @@ class _HomePageState extends State<HomePage> {
             ),
           ),
           const SizedBox(width: 16),
-          ElevatedButton.icon(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF1A73E8),
-              foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(30),
-              ),
-            ),
-            onPressed: _handleSend,
-            icon: const Icon(Icons.send),
-            label: const Text(
-              'Send',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
-            ),
+         ElevatedButton.icon(
+  style: ElevatedButton.styleFrom(
+    backgroundColor: const Color(0xFF1A73E8),
+    foregroundColor: Colors.white,
+    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+    shape: RoundedRectangleBorder(
+      borderRadius: BorderRadius.circular(30),
+    ),
+  ),
+  onPressed: _isSending ? null : _handleSend, // Disable button while sending
+  icon: _isSending 
+      ? SizedBox(
+          width: 20,
+          height: 20,
+          child: CircularProgressIndicator(
+            strokeWidth: 2,
+            color: Colors.white,
           ),
+        ) 
+      : const Icon(Icons.send),
+  label: Text(
+    _isSending ? 'Sending...' : 'Send',
+    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+  ),
+)
         ],
       ),
     );
@@ -828,13 +855,17 @@ class _HomePageState extends State<HomePage> {
             },
             child: const Text('No'),
           ),
-          TextButton(
-            onPressed: () async {
-              Navigator.of(context).pop(); // Close the dialog
-              await _sendConfirmationPayload(editableMedicines); // Send confirmation payload with edited medicines
-            },
-            child: const Text('Yes'),
-          ),
+          ElevatedButton(
+  style: ElevatedButton.styleFrom(
+    backgroundColor: const Color(0xFF1A73E8),
+    foregroundColor: Colors.white,
+  ),
+  onPressed: () async {
+    Navigator.of(context).pop(); // Close the dialog first
+    await _sendConfirmationPayload(editableMedicines);
+  },
+  child: const Text('Yes'),
+)
         ],
       );
     },
