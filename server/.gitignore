@@ -1,0 +1,21 @@
+# Exclude .env files
+.env
+*.env
+
+# Exclude PyCharm project files
+.idea/
+
+# Exclude Python cache files
+__pycache__/
+*.py[cod]
+*.pyo
+
+# Exclude virtual environments
+venv/
+env/
+*.egg-info/
+
+# Exclude logs and temporary files
+*.log
+*.tmp
+.DS_Store
