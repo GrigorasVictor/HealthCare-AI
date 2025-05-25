@@ -737,9 +737,6 @@ class _HomePageState extends State<HomePage> {
   }
 
   void _showConfirmationDialog(BuildContext context, List<Medicine> medicines) {
-  // Create a mutable copy of medicines so we can edit them
-  final editableMedicines = List<Medicine>.from(medicines);
-  
   showDialog(
     context: context,
     builder: (BuildContext context) {
@@ -748,14 +745,14 @@ class _HomePageState extends State<HomePage> {
         content: Container(
           width: double.maxFinite,
           constraints: BoxConstraints(
-            maxHeight: MediaQuery.of(context).size.height * 0.6, // Limit height to 60% of screen
+            maxHeight: MediaQuery.of(context).size.height * 0.6,
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const Text(
-                'The payload has been sent successfully. Would you like to add these to the calendar? You can edit dates and times if needed:',
+                'The payload has been sent successfully. Would you like to add these medications to your calendar?',
               ),
               const SizedBox(height: 16),
               Flexible(
@@ -763,13 +760,13 @@ class _HomePageState extends State<HomePage> {
                   thumbVisibility: true,
                   child: ListView.builder(
                     shrinkWrap: true,
-                    itemCount: editableMedicines.length,
+                    itemCount: medicines.length,
                     itemBuilder: (context, index) {
-                      final medicine = editableMedicines[index];
+                      final medicine = medicines[index];
                       return Card(
                         margin: const EdgeInsets.symmetric(vertical: 4),
                         child: Padding(
-                          padding: const EdgeInsets.all(8.0),
+                          padding: const EdgeInsets.all(12.0),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
@@ -777,65 +774,26 @@ class _HomePageState extends State<HomePage> {
                                 children: [
                                   const Icon(Icons.medication, color: Color(0xFF1A73E8)),
                                   const SizedBox(width: 8),
-                                  Text(
-                                    medicine.name,
-                                    style: const TextStyle(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.bold,
+                                  Expanded(
+                                    child: Text(
+                                      medicine.name,
+                                      style: const TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.bold,
+                                      ),
                                     ),
                                   ),
                                 ],
                               ),
                               const SizedBox(height: 8),
-                              Row(
-                                children: [
-                                  const Text('Date: '),
-                                  TextButton(
-                                    onPressed: () async {
-                                      final newDate = await showDatePicker(
-                                        context: context,
-                                        initialDate: medicine.date,
-                                        firstDate: DateTime.now().subtract(const Duration(days: 365)),
-                                        lastDate: DateTime.now().add(const Duration(days: 365)),
-                                      );
-                                      if (newDate != null) {
-                                        editableMedicines[index] = Medicine(
-                                          name: medicine.name,
-                                          date: newDate,
-                                          time: medicine.time,
-                                        );
-                                      }
-                                    },
-                                    child: Text(
-                                      medicine.date.toLocal().toString().split(' ')[0],
-                                      style: const TextStyle(color: Color(0xFF1A73E8)),
-                                    ),
-                                  ),
-                                ],
+                              Text(
+                                'Date: ${medicine.date.toLocal().toString().split(' ')[0]}',
+                                style: TextStyle(color: Colors.grey.shade700),
                               ),
-                              Row(
-                                children: [
-                                  const Text('Time: '),
-                                  TextButton(
-                                    onPressed: () async {
-                                      final newTime = await showTimePicker(
-                                        context: context,
-                                        initialTime: medicine.time,
-                                      );
-                                      if (newTime != null) {
-                                        editableMedicines[index] = Medicine(
-                                          name: medicine.name,
-                                          date: medicine.date,
-                                          time: newTime,
-                                        );
-                                      }
-                                    },
-                                    child: Text(
-                                      medicine.time.format(context),
-                                      style: const TextStyle(color: Color(0xFF1A73E8)),
-                                    ),
-                                  ),
-                                ],
+                              const SizedBox(height: 4),
+                              Text(
+                                'Time: ${medicine.time.format(context)}',
+                                style: TextStyle(color: Colors.grey.shade700),
                               ),
                             ],
                           ),
@@ -851,21 +809,21 @@ class _HomePageState extends State<HomePage> {
         actions: [
           TextButton(
             onPressed: () {
-              Navigator.of(context).pop(); // Close the dialog
+              Navigator.of(context).pop();
             },
             child: const Text('No'),
           ),
           ElevatedButton(
-  style: ElevatedButton.styleFrom(
-    backgroundColor: const Color(0xFF1A73E8),
-    foregroundColor: Colors.white,
-  ),
-  onPressed: () async {
-    Navigator.of(context).pop(); // Close the dialog first
-    await _sendConfirmationPayload(editableMedicines);
-  },
-  child: const Text('Yes'),
-)
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF1A73E8),
+              foregroundColor: Colors.white,
+            ),
+            onPressed: () async {
+              Navigator.of(context).pop();
+              await _sendConfirmationPayload(medicines);
+            },
+            child: const Text('Yes'),
+          )
         ],
       );
     },
