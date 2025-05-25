@@ -131,7 +131,7 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
- void _handleSend() async {
+  void _handleSend() async {
   final comment = _commentController.text;
 
   if (globalFileName == null || globalFileBytes == null) {
@@ -154,7 +154,7 @@ class _HomePageState extends State<HomePage> {
 
   try {
     // Send the payload with file bytes
-    final responsePayload = await ServiceFunctions.sendPayload(
+    final success = await ServiceFunctions.sendPayload(
       payload: payload,
       fileBytes: globalFileBytes,
       filePath: globalFileName,
@@ -164,18 +164,13 @@ class _HomePageState extends State<HomePage> {
       _isSending = false; // Reset loading state
     });
 
-    if (responsePayload.isNotEmpty) {
+    if (success.isNotEmpty) {
       setState(() {
         _commentController.clear();
         globalFileName = null;
         globalFileBytes = null;
       });
-      
-      // Parse the medicines for display
-      final medicines = ServiceFunctions.parseMedicationSchedule(responsePayload);
-      
-      // Show confirmation dialog with medicines and original payload
-      _showConfirmationDialog(context, medicines, responsePayload);
+      _showConfirmationDialog(context, success);
     } else {
       _showSnackBar('Failed to send payload.', Colors.red);
     }
@@ -741,126 +736,171 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  void _showConfirmationDialog(BuildContext context, List<Medicine> medicines, Map<String, dynamic> originalPayload) {
+  void _showConfirmationDialog(BuildContext context, List<Medicine> medicines) {
+  // Create a mutable copy of medicines so we can edit them
+  final editableMedicines = List<Medicine>.from(medicines);
+  
   showDialog(
     context: context,
     builder: (BuildContext context) {
-      return AlertDialog(
-        title: const Text('Confirmation'),
-        content: Container(
-          width: double.maxFinite,
-          constraints: BoxConstraints(
-            maxHeight: MediaQuery.of(context).size.height * 0.6,
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text(
-                'The payload has been sent successfully. Would you like to add these medications to your calendar?',
+      return StatefulBuilder(
+        builder: (context, setState) {
+          return AlertDialog(
+            title: const Text('Confirmation'),
+            content: Container(
+              width: double.maxFinite,
+              constraints: BoxConstraints(
+                maxHeight: MediaQuery.of(context).size.height * 0.6, // Limit height to 60% of screen
               ),
-              const SizedBox(height: 16),
-              Flexible(
-                child: Scrollbar(
-                  thumbVisibility: true,
-                  child: ListView.builder(
-                    shrinkWrap: true,
-                    itemCount: medicines.length,
-                    itemBuilder: (context, index) {
-                      final medicine = medicines[index];
-                      return Card(
-                        margin: const EdgeInsets.symmetric(vertical: 4),
-                        child: Padding(
-                          padding: const EdgeInsets.all(12.0),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Row(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'The payload has been sent successfully. Would you like to add these to the calendar? You can edit dates and times if needed:',
+                  ),
+                  const SizedBox(height: 16),
+                  Flexible(
+                    child: Scrollbar(
+                      thumbVisibility: true,
+                      child: ListView.builder(
+                        shrinkWrap: true,
+                        itemCount: editableMedicines.length,
+                        itemBuilder: (context, index) {
+                          final medicine = editableMedicines[index];
+                          return Card(
+                            margin: const EdgeInsets.symmetric(vertical: 4),
+                            child: Padding(
+                              padding: const EdgeInsets.all(8.0),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  const Icon(Icons.medication, color: Color(0xFF1A73E8)),
-                                  const SizedBox(width: 8),
-                                  Expanded(
-                                    child: Text(
-                                      medicine.name,
-                                      style: const TextStyle(
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.bold,
+                                  Row(
+                                    children: [
+                                      const Icon(Icons.medication, color: Color(0xFF1A73E8)),
+                                      const SizedBox(width: 8),
+                                      Text(
+                                        medicine.name,
+                                        style: const TextStyle(
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.bold,
+                                        ),
                                       ),
-                                    ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 8),
+                                  Row(
+                                    children: [
+                                      const Text('Date: '),
+                                      TextButton(
+                                        onPressed: () async {
+                                          final newDate = await showDatePicker(
+                                            context: context,
+                                            initialDate: medicine.date,
+                                            firstDate: DateTime.now().subtract(const Duration(days: 365)),
+                                            lastDate: DateTime.now().add(const Duration(days: 365)),
+                                          );
+                                          if (newDate != null) {
+                                            setState(() {
+                                              editableMedicines[index] = Medicine(
+                                                name: medicine.name,
+                                                date: newDate,
+                                                time: medicine.time,
+                                              );
+                                            });
+                                          }
+                                        },
+                                        child: Text(
+                                          medicine.date.toLocal().toString().split(' ')[0],
+                                          style: const TextStyle(color: Color(0xFF1A73E8)),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  Row(
+                                    children: [
+                                      const Text('Time: '),
+                                      TextButton(
+                                        onPressed: () async {
+                                          final newTime = await showTimePicker(
+                                            context: context,
+                                            initialTime: medicine.time,
+                                          );
+                                          if (newTime != null) {
+                                            setState(() {
+                                              editableMedicines[index] = Medicine(
+                                                name: medicine.name,
+                                                date: medicine.date,
+                                                time: newTime,
+                                              );
+                                            });
+                                          }
+                                        },
+                                        child: Text(
+                                          medicine.time.format(context),
+                                          style: const TextStyle(color: Color(0xFF1A73E8)),
+                                        ),
+                                      ),
+                                    ],
                                   ),
                                 ],
                               ),
-                              const SizedBox(height: 8),
-                              Text(
-                                'Date: ${medicine.date.toLocal().toString().split(' ')[0]}',
-                                style: TextStyle(color: Colors.grey.shade700),
-                              ),
-                              const SizedBox(height: 4),
-                              Text(
-                                'Time: ${medicine.time.format(context)}',
-                                style: TextStyle(color: Colors.grey.shade700),
-                              ),
-                            ],
-                          ),
-                        ),
-                      );
-                    },
+                            ),
+                          );
+                        },
+                      ),
+                    ),
                   ),
-                ),
+                ],
               ),
-            ],
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () {
-              Navigator.of(context).pop();
-            },
-            child: const Text('No'),
-          ),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF1A73E8),
-              foregroundColor: Colors.white,
             ),
-            onPressed: () async {
-              Navigator.of(context).pop();
-              await _sendConfirmationPayload(originalPayload);
-            },
-            child: const Text('Yes'),
-          )
-        ],
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.of(context).pop(); // Close the dialog
+                },
+                child: const Text('No'),
+              ),
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF1A73E8),
+                  foregroundColor: Colors.white,
+                ),
+                onPressed: () async {
+                  Navigator.of(context).pop(); // Close the dialog first
+                  await _sendConfirmationPayload(editableMedicines);
+                },
+                child: const Text('Yes'),
+              )
+            ],
+          );
+        },
       );
     },
   );
 }
-
-Future<void> _sendConfirmationPayload(Map<String, dynamic> payload) async {
+  Future<void> _sendConfirmationPayload(List<Medicine> medicines) async {
   try {
-    setState(() {
-      _isConfirmationSending = true;
-    });
-    
-    // Don't create a new Map, use the original payload directly
-    // Just add the confirmed flag to the existing payload
-    payload['confirmed'] = true;
+    final payload = {
+      'medicines': medicines.map((medicine) {
+        return {
+          'name': medicine.name,
+          'date': medicine.date.toIso8601String(),
+          'time': '${medicine.time.hour}:${medicine.time.minute}',
+        };
+      }).toList(),
+      'confirmed': true, // Indicate that the user confirmed the medicines
+    };
 
     final success = await ServiceFunctions.sendConfirmationPayload(payload);
-    
-    setState(() {
-      _isConfirmationSending = false;
-    });
 
     if (success) {
-      _showSnackBar('Calendar events created successfully!', Colors.green);
+      _showSnackBar('Confirmation sent successfully!', Colors.green);
     } else {
-      _showSnackBar('Failed to create calendar events.', Colors.red);
+      _showSnackBar('Failed to send confirmation.', Colors.red);
     }
   } catch (e) {
-    setState(() {
-      _isConfirmationSending = false;
-    });
-    _showSnackBar('Error: $e', Colors.red);
+    _showSnackBar('Error sending confirmation: $e', Colors.red);
   }
 }
 }
