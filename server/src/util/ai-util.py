@@ -2,7 +2,6 @@ import re
 from datetime import date
 
 import ollama
-import json
 
 class Ai:
   def __init__(self, model):
