@@ -17,10 +17,7 @@ class Calendar:
 
         calendar_events = []
         for medicine in medicines:
-            # Extract the base medicine name (remove the "#X" part)
             base_name = medicine['name'].split('#')[0].strip()
-
-            # Use the date field which already has the ISO format
             start_dt = datetime.fromisoformat(medicine['date'])
             end_dt = start_dt + timedelta(hours=1)
 
@@ -48,5 +45,5 @@ if __name__ == '__main__':
                  {'name': 'Paracetamol #4', 'date': '2025-05-26T00:00:00', 'time': '00:00'}]
 
     events = calendar_util_ex.convert_to_calendar_events(medicines)
-    for event in events:
-        print(event)
+    for event1 in events:
+        print(event1)
