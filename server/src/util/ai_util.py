@@ -16,45 +16,25 @@ You are an assistant specialized in converting a medical prescription and patien
 – RULES:
 1. Reply ONLY with a valid JSON object, no explanations.
 2. Use exactly these keys:
-   - "summary": a short description, e.g. "medication_schedule"
+   - "name" : The name of the pill
    - "start": object with "dateTime" (ISO 8601) and "timeZone" (e.g. "Europe/Bucharest")
-   - "end": object with "dateTime" and "timeZone"
-   - "recurrence": list containing a single RRULE string: FREQ=DAILY;COUNT=…
-   - "medications": list of objects, each with:
-       - "name" (string)
-       - "totalCount" (integer)
-       - "perDay" (integer)
-       - "days" (integer)
-       - "timeWindow" (string, e.g. "08:00-20:00")
-3. If there’s a preferred time window in user comments, override the prescription’s "timeWindow".
+   - "amount": how many times should be calculated
+   - "distance": the time distance that should be calculated from the start date and time
+3. If the information in the comment override with the prescription, priorities the comment.
 4. Ensure every field is present and that the JSON is strictly parsable.
 5. Select the suitable time zone from the country where he/she lives.
 
 – EXAMPLE OUTPUT:
 ```json
 {
-  "summary": "medication_schedule",
-  "start": {
-    "dateTime": "2020-05-25T08:00:00",
-    "timeZone": "Europe/Bucharest"
-  },
-  "end": {
-    "dateTime": "2020-05-29T20:00:00",
-    "timeZone": "Europe/Bucharest"
-  },
-  "recurrence": [
-    "RRULE:FREQ=DAILY;COUNT=5"
-  ],
-  "medications": [
-    {
-      "name": "Paracetamol",
-      "totalCount": 20,
-      "perDay": 4,
-      "days": 5,
-      "timeWindow": "08:00-20:00"
-    }
-  ]
-}"""
+  "name": "Paracetamol",
+  "start": "2020-05-29T20:00:00",
+  "amount": 5,
+  "distance": 2
+}```
+
+The exemple will have 5 pills with 2 hours distance started by that date.
+"""
 
   def create_input(self,prescription: str, patient_info: dict, comments: str = None) -> str:
     """
@@ -78,7 +58,7 @@ You are an assistant specialized in converting a medical prescription and patien
 
     return "\n".join(full_input)
 
-  def get_event(self, prescription: str, patient_info: dict, comments: str = None) -> str:
+  def get_formula(self, prescription: str, patient_info: dict, comments: str = None) -> str:
     """
     Call the local Ollama model to generate the event JSON.
     :param prescription: Prescription text
@@ -99,7 +79,6 @@ You are an assistant specialized in converting a medical prescription and patien
                .replace('```', '')
                .strip())
     return summary
-
 
 
 if __name__ == '__main__':

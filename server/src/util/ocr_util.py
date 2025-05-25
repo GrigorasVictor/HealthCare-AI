@@ -8,11 +8,12 @@ class Ocr:
         self.reader = easyocr.Reader([self.language])
 
 
-    def transform_to_text(self, image):
-        text = self.reader.readtext(image)
+    def transform_to_text(self, images):
         result = ""
-        for (_, text, _) in text:
-            result += text
+        for image in images:
+            text = self.reader.readtext(image)
+            for (_, text, _) in text:
+                result += text
         return result
 
 
