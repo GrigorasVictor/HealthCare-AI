@@ -13,7 +13,11 @@ class AIService:
         return json
 
 if __name__ == '__main__':
-    ai_util = Ai(model="qwen3:8b")
-    ocr_util = Ocr('en')
-    ai_service = AIService(ai_util, ocr_util)
-    print(ai_service.get_patience_data(user_data="",image="",comment=""))
+    ai_util_ex = Ai(model="qwen_custom:latest")
+    ocr_util_ex = Ocr('en')
+    ai_service_ex = AIService(ai_util_ex, ocr_util_ex)
+
+    patient_ex = {"sex": "female", "age_group": "adult", "pregnant": "NO","country" : "Romania"}
+    image_ex = "../../sample/image2.png"
+
+    print(ai_service_ex.get_patience_data(user_data=patient_ex,image=image_ex,comment="I have 5 pills,I have fever"))
