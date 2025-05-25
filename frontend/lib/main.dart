@@ -131,7 +131,7 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
-  void _handleSend() async {
+ void _handleSend() async {
   final comment = _commentController.text;
 
   if (globalFileName == null || globalFileBytes == null) {
@@ -154,7 +154,7 @@ class _HomePageState extends State<HomePage> {
 
   try {
     // Send the payload with file bytes
-    final success = await ServiceFunctions.sendPayload(
+    final responsePayload = await ServiceFunctions.sendPayload(
       payload: payload,
       fileBytes: globalFileBytes,
       filePath: globalFileName,
@@ -164,13 +164,18 @@ class _HomePageState extends State<HomePage> {
       _isSending = false; // Reset loading state
     });
 
-    if (success.isNotEmpty) {
+    if (responsePayload.isNotEmpty) {
       setState(() {
         _commentController.clear();
         globalFileName = null;
         globalFileBytes = null;
       });
-      _showConfirmationDialog(context, success);
+      
+      // Parse the medicines for display
+      final medicines = ServiceFunctions.parseMedicationSchedule(responsePayload);
+      
+      // Show confirmation dialog with medicines and original payload
+      _showConfirmationDialog(context, medicines, responsePayload);
     } else {
       _showSnackBar('Failed to send payload.', Colors.red);
     }
@@ -736,7 +741,7 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  void _showConfirmationDialog(BuildContext context, List<Medicine> medicines) {
+  void _showConfirmationDialog(BuildContext context, List<Medicine> medicines, Map<String, dynamic> originalPayload) {
   showDialog(
     context: context,
     builder: (BuildContext context) {
@@ -820,7 +825,7 @@ class _HomePageState extends State<HomePage> {
             ),
             onPressed: () async {
               Navigator.of(context).pop();
-              await _sendConfirmationPayload(medicines);
+              await _sendConfirmationPayload(originalPayload);
             },
             child: const Text('Yes'),
           )
@@ -829,28 +834,33 @@ class _HomePageState extends State<HomePage> {
     },
   );
 }
-  Future<void> _sendConfirmationPayload(List<Medicine> medicines) async {
+
+Future<void> _sendConfirmationPayload(Map<String, dynamic> payload) async {
   try {
-    final payload = {
-      'medicines': medicines.map((medicine) {
-        return {
-          'name': medicine.name,
-          'date': medicine.date.toIso8601String(),
-          'time': '${medicine.time.hour}:${medicine.time.minute}',
-        };
-      }).toList(),
-      'confirmed': true, // Indicate that the user confirmed the medicines
-    };
+    setState(() {
+      _isConfirmationSending = true;
+    });
+    
+    // Don't create a new Map, use the original payload directly
+    // Just add the confirmed flag to the existing payload
+    payload['confirmed'] = true;
 
     final success = await ServiceFunctions.sendConfirmationPayload(payload);
+    
+    setState(() {
+      _isConfirmationSending = false;
+    });
 
     if (success) {
-      _showSnackBar('Confirmation sent successfully!', Colors.green);
+      _showSnackBar('Calendar events created successfully!', Colors.green);
     } else {
-      _showSnackBar('Failed to send confirmation.', Colors.red);
+      _showSnackBar('Failed to create calendar events.', Colors.red);
     }
   } catch (e) {
-    _showSnackBar('Error sending confirmation: $e', Colors.red);
+    setState(() {
+      _isConfirmationSending = false;
+    });
+    _showSnackBar('Error: $e', Colors.red);
   }
 }
 }
