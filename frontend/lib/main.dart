@@ -881,16 +881,18 @@ class _HomePageState extends State<HomePage> {
 }
   Future<void> _sendConfirmationPayload(List<Medicine> medicines) async {
   try {
-    final payload = {
-      'medicines': medicines.map((medicine) {
-        return {
-          'name': medicine.name,
-          'date': medicine.date.toIso8601String(),
-          'time': '${medicine.time.hour}:${medicine.time.minute}',
-        };
-      }).toList(),
-      'confirmed': true, // Indicate that the user confirmed the medicines
-    };
+    // Create a direct list of medicine objects
+    final payload = medicines.map((medicine) {
+      // Format time with proper padding for hours and minutes
+      final formattedHour = medicine.time.hour.toString().padLeft(2, '0');
+      final formattedMinute = medicine.time.minute.toString().padLeft(2, '0');
+      
+      return {
+        'name': medicine.name,
+        'date': medicine.date.toIso8601String(),
+        'time': '$formattedHour:$formattedMinute',
+      };
+    }).toList();
 
     final success = await ServiceFunctions.sendConfirmationPayload(payload);
 

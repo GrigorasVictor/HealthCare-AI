@@ -99,17 +99,17 @@ class ServiceFunctions {
   }
 
   static Future<bool> sendConfirmationPayload(
-    Map<String, dynamic> payload,
-  ) async {
-    try {
-      final response = await http.post(
-        Uri.parse('$_baseUrl/server/calendar'),
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode(payload),
-      );
-      return response.statusCode == 200;
-    } catch (e) {
-      return false;
-    }
+  List<Map<String, dynamic>> payload,
+) async {
+  try {
+    final response = await http.post(
+      Uri.parse('$_baseUrl/server/calendar'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode(payload),
+    );
+    return response.statusCode == 200;
+  } catch (e) {
+    return false;
   }
+}
 }
