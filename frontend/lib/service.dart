@@ -15,7 +15,7 @@ class FilePickerResult {
 }
 
 class ServiceFunctions {
-  static const String _baseUrl = 'http://localhost:8080';
+  static const String _baseUrl = 'http://localhost:8000';
 
   static Future<Map<String, bool>> checkAllServiceStatus() async {
     try {

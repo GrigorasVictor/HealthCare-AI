@@ -39,10 +39,10 @@ class Calendar:
 
 if __name__ == '__main__':
     calendar_util_ex = Calendar()
-    medicines = [{'name': 'Paracetamol #1', 'date': '2025-05-25T12:00:00', 'time': '12:00'},
-                 {'name': 'Paracetamol #2', 'date': '2025-05-25T16:00:00', 'time': '16:00'},
-                 {'name': 'Paracetamol #3', 'date': '2025-05-25T20:00:00', 'time': '20:00'},
-                 {'name': 'Paracetamol #4', 'date': '2025-05-26T00:00:00', 'time': '00:00'}]
+    medicines = [{'name': 'Paracetamol #1', 'date': '2025-05-28T12:00:00', 'time': '12:00'},
+                 {'name': 'Paracetamol #2', 'date': '2025-05-28T16:00:00', 'time': '16:00'},
+                 {'name': 'Paracetamol #3', 'date': '2025-05-28T20:00:00', 'time': '20:00'},
+                 {'name': 'Paracetamol #4', 'date': '2025-05-28T00:00:00', 'time': '00:00'}]
 
     events = calendar_util_ex.convert_to_calendar_events(medicines)
     for event1 in events:
