@@ -2,7 +2,6 @@ import pickle
 
 from googleapiclient.discovery import build
 from google.auth.transport.requests import Request
-from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow
 import os
 from src.util.calendar_util import Calendar
@@ -73,9 +72,10 @@ class CalendarService:
 
 if __name__ == '__main__':
     events = [{'summary': 'Paracetamol', 'start': {'dateTime': '2025-05-28T12:00:00', 'timeZone': 'Europe/Bucharest'}, 'end': {'dateTime': '2025-05-28T13:00:00', 'timeZone': 'Europe/Bucharest'}, 'description': 'Paracetamol #1'},
-{'summary': 'Paracetamol', 'start': {'dateTime': '2025-05-28T16:00:00', 'timeZone': 'Europe/Bucharest'}, 'end': {'dateTime': '2025-05-28T17:00:00', 'timeZone': 'Europe/Bucharest'}, 'description': 'Paracetamol #2'},
-{'summary': 'Paracetamol', 'start': {'dateTime': '2025-05-28T20:00:00', 'timeZone': 'Europe/Bucharest'}, 'end': {'dateTime': '2025-05-28T21:00:00', 'timeZone': 'Europe/Bucharest'}, 'description': 'Paracetamol #3'},
-{'summary': 'Paracetamol', 'start': {'dateTime': '2025-05-28T00:00:00', 'timeZone': 'Europe/Bucharest'}, 'end': {'dateTime': '2025-05-28T01:00:00', 'timeZone': 'Europe/Bucharest'}, 'description': 'Paracetamol #4'}]
+                {'summary': 'Paracetamol', 'start': {'dateTime': '2025-05-28T16:00:00', 'timeZone': 'Europe/Bucharest'}, 'end': {'dateTime': '2025-05-28T17:00:00', 'timeZone': 'Europe/Bucharest'}, 'description': 'Paracetamol #2'},
+                {'summary': 'Paracetamol', 'start': {'dateTime': '2025-05-28T20:00:00', 'timeZone': 'Europe/Bucharest'}, 'end': {'dateTime': '2025-05-28T21:00:00', 'timeZone': 'Europe/Bucharest'}, 'description': 'Paracetamol #3'},
+                {'summary': 'Paracetamol', 'start': {'dateTime': '2025-05-28T00:00:00', 'timeZone': 'Europe/Bucharest'}, 'end': {'dateTime': '2025-05-28T01:00:00', 'timeZone': 'Europe/Bucharest'}, 'description': 'Paracetamol #4'}]
+
     token_path = "../../token.json"
     credentials_path = "../../credentials.json"
     calendar_util = Calendar

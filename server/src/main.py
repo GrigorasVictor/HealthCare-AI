@@ -4,7 +4,7 @@ from fastapi import FastAPI, Form, File, UploadFile, Depends, HTTPException, Res
 from typing import List, Dict, Any
 
 from starlette import status
-
+import logging
 from src.service.ai_service import AIService
 from src.service.calendar_service import CalendarService
 from src.util.ai_util import Ai
@@ -20,6 +20,7 @@ TOKEN_PATH       = os.getenv('TOKEN_PATH')
 CREDENTIALS_PATH = os.getenv('CREDENTIALS_PATH')
 
 server = FastAPI()
+logger = logging.getLogger("uvicorn")
 
 ocr_util = Ocr('en')
 ai_util = Ai('qwen_custom:latest')
@@ -58,25 +59,21 @@ async def send_data(
     pil_img = Image.open(BytesIO(contents)).convert("RGB")
     img_np  = np.array(pil_img)
 
-
     user = {"gender": gender, "age_group": child, "pregnant": pregnant}
     output = ai_service.get_patience_data(user,[img_np],comment)
+    logger.info("AI processing done")
     medicines = ai_service.get_medicine(output)
-    print(user)
-    print(output)
-    print(medicines)
-    print(comment)
+    logger.info("Formula to medicine done")
     return medicines
 
 @server.post("/server/calendar", status_code=status.HTTP_200_OK)
 async def send_calendar(request: Request):
     medicines = await request.json()
-    print(medicines)
     if not isinstance(medicines, list):
         raise HTTPException(status_code=422, detail="'medicines' must be a list")
 
     events = calendar_util.convert_to_calendar_events(medicines)
     for evt in events:
         calendar_service.create_event(evt, calendar_id="primary")
-
+        logger.info(f"Event '{evt}' putted in calendar")
     return Response(status_code=status.HTTP_200_OK)

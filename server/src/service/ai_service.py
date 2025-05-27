@@ -1,12 +1,8 @@
 from datetime import datetime, timedelta
-#from src.util.ai_util import Ai
-#from src.util.ocr_util import Ocr
-from typing import List, Dict
-import json
-
 from src.util.ai_util import Ai
 from src.util.ocr_util import Ocr
-
+from typing import List, Dict
+import json
 
 class AIService:
     def __init__(self, ai_util,ocr_util):
@@ -66,19 +62,3 @@ if __name__ == '__main__':
    body = ai_service_ex.get_patience_data(user_data=patient_ex,image=images,comment="I have 10 pills, I need to take 2 in a day,I have fever")
    print(body)
    print(ai_service_ex.get_medicine(body))
-
-# if __name__ == '__main__':
-#     ai_util_ex = None
-#     ocr_util_ex = None
-#     ai_service_ex = AIService(ai_util_ex, ocr_util_ex)
-#     body = {
-#         "name": "Paracetamol",
-#         "start": {
-#             "dateTime": "2025-05-25T12:00:00",
-#             "timeZone": "Europe/Bucharest"
-#         },
-#         "amount": 4,
-#         "distance": 4
-#     }
-#     print(body)
-#     print(ai_service_ex.get_medicine(body))

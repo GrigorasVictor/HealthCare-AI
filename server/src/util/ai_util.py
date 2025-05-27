@@ -22,7 +22,7 @@ You are an assistant specialized in converting a medical prescription and patien
    - "distance": the time distance that should be calculated from the start date and time
 3. If the information in the comment override with the prescription, priorities the comment.
 4. Ensure every field is present and that the JSON is strictly parsable.
-5. Select the suitable time zone from the country where he/she lives.
+5. If the comment from the user exists, try to priorities the comment (ex: if the package got 5 pills and he says that he got 10, you will consider 10).
 
 – EXAMPLE OUTPUT:
 ```json
@@ -82,7 +82,6 @@ The exemple will have 5 pills with 2 hours distance started by that date.
 
 
 if __name__ == '__main__':
-# Example usage:
   ai = Ai(model="qwen3:8b")
   prescription_text = """
 Package Leaflet: Information for the User
