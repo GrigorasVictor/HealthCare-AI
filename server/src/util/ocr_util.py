@@ -1,7 +1,5 @@
 import easyocr
 
-
-
 class Ocr:
     def __init__(self, language):
         self.language = language
@@ -15,6 +13,7 @@ class Ocr:
             for (_, text, _) in text:
                 result += text
         return result
+
 
 
 if __name__ == '__main__':

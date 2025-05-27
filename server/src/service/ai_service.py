@@ -41,7 +41,7 @@ class AIService:
         amount = body.get("amount")
         distance = body.get("distance")
 
-        if not (name and start_datetime_str and amount and distance):
+        if name is None or start_datetime_str is None or amount is None or distance is None:
             return events
 
         start_dt = datetime.fromisoformat(start_datetime_str)
