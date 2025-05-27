@@ -1,6 +1,8 @@
 # Exclude .env files
 .env
 *.env
+credentials.json
+token.json
 
 # Exclude PyCharm project files
 .idea/

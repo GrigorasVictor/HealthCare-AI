@@ -2,6 +2,11 @@ from datetime import datetime, timedelta
 #from src.util.ai_util import Ai
 #from src.util.ocr_util import Ocr
 from typing import List, Dict
+import json
+
+from src.util.ai_util import Ai
+from src.util.ocr_util import Ocr
+
 
 class AIService:
     def __init__(self, ai_util,ocr_util):
@@ -11,8 +16,8 @@ class AIService:
 
     def get_patience_data(self, user_data,image,comment):
         prospect = self.Ocr.transform_to_text(image)
-        json = self.Ai.get_formula(prospect, user_data, comment)
-        return json
+        output = json.loads(self.Ai.get_formula(prospect, user_data, comment))
+        return output
 
     def get_medicine(self, body: Dict) -> List[Dict]:
         """
