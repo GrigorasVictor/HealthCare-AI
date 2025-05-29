@@ -37,8 +37,6 @@ The app uses an AI backend to analyze your medication schedule and automatically
 
 The backend is built with a robust architecture that handles all the complex operations:
 
-- **User Authentication System**: Secure login and data protection using industry-standard protocols
-- **Medication Database**: Stores information about user medications, schedules, and history
 - **AI Engine**: 
   - Analyzes medication requirements and timing
   - Uses machine learning to optimize reminder schedules based on user habits
